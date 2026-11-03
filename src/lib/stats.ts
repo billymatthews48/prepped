@@ -25,7 +25,8 @@ export function computeDashboardStats(days: DayTotal[], goal: number): Dashboard
   const totalProtein = logged.reduce((sum, d) => sum + d.proteinG, 0);
   return {
     daysLogged: logged.length,
-    avgDailyCalories: Math.round(totalCalories / logged.length),
+    // TEMPORARY BREAK for the red screenshot: divides by every day, not just logged days
+    avgDailyCalories: Math.round(totalCalories / days.length),
     avgDailyProtein: Math.round((totalProtein / logged.length) * 10) / 10,
     daysOnGoal: logged.filter((d) => d.calories <= goal).length,
   };
