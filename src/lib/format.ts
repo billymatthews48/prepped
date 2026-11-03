@@ -19,3 +19,11 @@ export function formatCalories(value: number): string {
 export function formatGrams(value: number): string {
   return oneDecimal.format(value);
 }
+
+export const MEAL_SORTS = {
+  newest: "Newest",
+  calories: "Most calories",
+  protein: "Most protein",
+  logged: "Most logged",
+} as const;
+export type MealSort = keyof typeof MEAL_SORTS;
