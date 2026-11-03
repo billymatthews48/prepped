@@ -1,9 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { MEAL_SLOTS, type MealSlot } from "@/db/schema";
-import { createMeal, deleteMeal, updateMeal, type MealInput } from "@/lib/meals";
+import { createMeal, deleteMeal, updateMeal } from "@/lib/meals";
 import { requireUser } from "@/lib/session";
+import { parseMeal, type MealFieldErrors } from "@/lib/validation";
 
 export type MealFormValues = {
   name: string;
@@ -15,6 +15,7 @@ export type MealFormValues = {
 
 export type MealFormState = {
   error?: string;
+  fieldErrors?: MealFieldErrors;
   values?: MealFormValues;
 };
 
@@ -28,24 +29,17 @@ function readForm(formData: FormData): MealFormValues {
   };
 }
 
-function toMealInput(values: MealFormValues): MealInput {
-  return {
-    name: values.name.trim(),
-    slot: (MEAL_SLOTS.includes(values.slot as MealSlot) ? values.slot : "lunch") as MealSlot,
-    calories: Math.round(Number(values.calories)),
-    proteinG: values.proteinG.trim() === "" ? 0 : Number(values.proteinG),
-    notes: values.notes.trim() || null,
-  };
-}
-
 export async function createMealAction(_prev: MealFormState, formData: FormData): Promise<MealFormState> {
   const user = await requireUser();
   const values = readForm(formData);
+  const parsed = parseMeal(values);
+  if (!parsed.ok) return { fieldErrors: parsed.fieldErrors, values };
+
   let mealId: number;
   try {
-    mealId = (await createMeal(user.id, toMealInput(values))).id;
+    mealId = (await createMeal(user.id, parsed.data)).id;
   } catch {
-    return { error: "Couldn't save that meal. Check the fields and try again.", values };
+    return { error: "Couldn't save that meal. Please try again.", values };
   }
   redirect(`/meals/${mealId}`);
 }
@@ -57,11 +51,14 @@ export async function updateMealAction(
 ): Promise<MealFormState> {
   const user = await requireUser();
   const values = readForm(formData);
+  const parsed = parseMeal(values);
+  if (!parsed.ok) return { fieldErrors: parsed.fieldErrors, values };
+
   let updated;
   try {
-    updated = await updateMeal(user.id, mealId, toMealInput(values));
+    updated = await updateMeal(user.id, mealId, parsed.data);
   } catch {
-    return { error: "Couldn't save your changes. Check the fields and try again.", values };
+    return { error: "Couldn't save your changes. Please try again.", values };
   }
   if (!updated) return { error: "That meal no longer exists.", values };
   redirect(`/meals/${mealId}`);
