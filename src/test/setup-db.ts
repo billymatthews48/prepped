@@ -1,11 +1,14 @@
 import type { PgliteDatabase } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
+import { fileURLToPath } from "node:url";
 import { db } from "@/db";
 import { auth } from "@/lib/auth";
 
+const migrationsFolder = fileURLToPath(new URL("../../drizzle", import.meta.url));
+
 /** Creates every table in the test file's in-memory database. */
 export async function migrateTestDb() {
-  await migrate(db as unknown as PgliteDatabase, { migrationsFolder: "drizzle" });
+  await migrate(db as unknown as PgliteDatabase, { migrationsFolder });
 }
 
 /**
