@@ -17,7 +17,7 @@ export async function listMeals(userId: string): Promise<Meal[]> {
   return db
     .select()
     .from(meals)
-    // TEMPORARY BREAK for the red screenshot: user filter removed
+    .where(eq(meals.userId, userId))
     .orderBy(desc(meals.createdAt), desc(meals.id));
 }
 
@@ -25,8 +25,7 @@ export async function getMeal(userId: string, mealId: number): Promise<Meal | nu
   const [meal] = await db
     .select()
     .from(meals)
-    // TEMPORARY BREAK for the red screenshot: user filter removed
-    .where(eq(meals.id, mealId));
+    .where(and(eq(meals.id, mealId), eq(meals.userId, userId)));
   return meal ?? null;
 }
 
