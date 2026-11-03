@@ -15,14 +15,14 @@ export function LogForm({ meals, day }: { meals: MealOption[]; day: string }) {
   const [state, formAction, pending] = useActionState(logMealAction, {});
 
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form action={formAction} noValidate className="flex flex-col gap-3">
       <FormError message={state.error} />
       <input type="hidden" name="eatenOn" value={day} />
       <div className="flex flex-col gap-1.5">
         <label htmlFor="log-meal" className="text-sm font-medium">
           Meal
         </label>
-        <select id="log-meal" name="mealId" required defaultValue="" className={inputClass}>
+        <select id="log-meal" name="mealId" defaultValue="" className={inputClass}>
           <option value="" disabled>
             Choose a meal…
           </option>

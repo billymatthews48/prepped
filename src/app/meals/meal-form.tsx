@@ -20,12 +20,19 @@ export function MealForm({
 }) {
   const [state, formAction, pending] = useActionState(action, {});
   const values = state.values ?? initial;
+  const errors = state.fieldErrors ?? {};
 
   return (
     <Card>
-      <form action={formAction} className="flex flex-col gap-4">
+      <form action={formAction} noValidate className="flex flex-col gap-4">
         <FormError message={state.error} />
-        <Field label="Meal name" name="name" defaultValue={values.name} placeholder="Chicken & rice bowl" required />
+        <Field
+          label="Meal name"
+          name="name"
+          defaultValue={values.name}
+          placeholder="Chicken & rice bowl"
+          error={errors.name}
+        />
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor="field-slot" className="text-sm font-medium">
@@ -43,6 +50,7 @@ export function MealForm({
               </option>
             ))}
           </select>
+          {errors.slot && <p className="text-sm text-danger">{errors.slot}</p>}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -54,7 +62,7 @@ export function MealForm({
             min={1}
             defaultValue={values.calories}
             placeholder="550"
-            required
+            error={errors.calories}
           />
           <Field
             label="Protein per serving (g)"
@@ -65,6 +73,7 @@ export function MealForm({
             step="0.1"
             defaultValue={values.proteinG}
             placeholder="42"
+            error={errors.proteinG}
           />
         </div>
 
@@ -80,6 +89,7 @@ export function MealForm({
             placeholder="Recipe link, sauce, how many it makes…"
             className="rounded-xl border border-border bg-surface px-3 py-2.5 text-base outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
           />
+          {errors.notes && <p className="text-sm text-danger">{errors.notes}</p>}
         </div>
 
         <div className="flex gap-3">
