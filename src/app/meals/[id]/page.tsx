@@ -7,6 +7,8 @@ import { SLOT_LABELS, formatCalories, formatGrams } from "@/lib/format";
 import { listEntriesForMeal } from "@/lib/log";
 import { getMeal } from "@/lib/meals";
 import { requireUser } from "@/lib/session";
+import { starredMealIds } from "@/lib/stars";
+import { StarButton } from "@/components/star-button";
 import { deleteMealAction } from "../actions";
 import { DeleteMealButton } from "./delete-button";
 import { QuickLogButton } from "./quick-log";
@@ -18,7 +20,11 @@ export default async function MealPage({ params }: PageProps<"/meals/[id]">) {
   const mealId = Number((await params).id);
   const meal = Number.isInteger(mealId) ? await getMeal(user.id, mealId) : null;
   if (!meal) notFound();
-  const history = await listEntriesForMeal(user.id, meal.id);
+  const [history, starredIds] = await Promise.all([
+    listEntriesForMeal(user.id, meal.id),
+    starredMealIds(user.id),
+  ]);
+  const starred = starredIds.has(meal.id);
 
   return (
     <>
@@ -26,8 +32,13 @@ export default async function MealPage({ params }: PageProps<"/meals/[id]">) {
         ← All meals
       </Link>
       <Card>
-        <p className="mb-1 text-sm font-medium text-accent">{SLOT_LABELS[meal.slot]}</p>
-        <h1 className="mb-5 text-2xl font-bold tracking-tight">{meal.name}</h1>
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div>
+            <p className="mb-1 text-sm font-medium text-accent">{SLOT_LABELS[meal.slot]}</p>
+            <h1 className="text-2xl font-bold tracking-tight">{meal.name}</h1>
+          </div>
+          <StarButton mealId={meal.id} mealName={meal.name} starred={starred} size="lg" />
+        </div>
 
         <dl className="mb-5 grid grid-cols-2 gap-3">
           <div className="rounded-xl bg-background p-4">

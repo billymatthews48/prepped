@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { MealCard } from "@/components/meal-card";
 import { ButtonLink, Card, PageHeader } from "@/components/ui";
-import { SLOT_LABELS, formatCalories, formatGrams } from "@/lib/format";
 import { listMeals } from "@/lib/meals";
 import { requireUser } from "@/lib/session";
+import { starredMealIds } from "@/lib/stars";
 
 export const metadata: Metadata = { title: "Meals · Prepped" };
 
 export default async function MealsPage() {
   const user = await requireUser();
-  const meals = await listMeals(user.id);
+  const [meals, starred] = await Promise.all([listMeals(user.id), starredMealIds(user.id)]);
 
   return (
     <>
@@ -25,19 +25,7 @@ export default async function MealsPage() {
         <ul className="flex flex-col gap-3">
           {meals.map((meal) => (
             <li key={meal.id}>
-              <Link
-                href={`/meals/${meal.id}`}
-                className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-4 shadow-sm transition-colors hover:border-accent"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">{meal.name}</p>
-                  <p className="text-sm text-muted">{SLOT_LABELS[meal.slot]}</p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="font-semibold tabular-nums">{formatCalories(meal.calories)} cal</p>
-                  <p className="text-sm text-muted tabular-nums">{formatGrams(meal.proteinG)} g protein</p>
-                </div>
-              </Link>
+              <MealCard meal={meal} starred={starred.has(meal.id)} />
             </li>
           ))}
         </ul>
