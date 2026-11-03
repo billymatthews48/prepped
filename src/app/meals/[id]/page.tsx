@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ButtonLink, Card } from "@/components/ui";
+import { formatDay } from "@/lib/dates";
 import { SLOT_LABELS, formatCalories, formatGrams } from "@/lib/format";
+import { listEntriesForMeal } from "@/lib/log";
 import { getMeal } from "@/lib/meals";
 import { requireUser } from "@/lib/session";
 import { deleteMealAction } from "../actions";
 import { DeleteMealButton } from "./delete-button";
+import { QuickLogButton } from "./quick-log";
 
 export const metadata: Metadata = { title: "Meal · Prepped" };
 
@@ -15,6 +18,7 @@ export default async function MealPage({ params }: PageProps<"/meals/[id]">) {
   const mealId = Number((await params).id);
   const meal = Number.isInteger(mealId) ? await getMeal(user.id, mealId) : null;
   if (!meal) notFound();
+  const history = await listEntriesForMeal(user.id, meal.id);
 
   return (
     <>
@@ -38,12 +42,35 @@ export default async function MealPage({ params }: PageProps<"/meals/[id]">) {
 
         {meal.notes && <p className="mb-5 whitespace-pre-wrap text-sm">{meal.notes}</p>}
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
+          <QuickLogButton mealId={meal.id} />
           <ButtonLink href={`/meals/${meal.id}/edit`} variant="secondary">
             Edit
           </ButtonLink>
           <DeleteMealButton mealName={meal.name} action={deleteMealAction.bind(null, meal.id)} />
         </div>
+      </Card>
+
+      <Card className="mt-5">
+        <h2 className="mb-3 font-semibold">
+          Logged {history.length} time{history.length === 1 ? "" : "s"}
+        </h2>
+        {history.length === 0 ? (
+          <p className="text-sm text-muted">You haven&apos;t logged this meal yet.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {history.map((entry) => (
+              <li key={entry.id} className="flex items-center justify-between py-2 text-sm">
+                <Link href={`/today?date=${entry.eatenOn}`} className="hover:underline">
+                  {formatDay(entry.eatenOn)}
+                </Link>
+                <span className="tabular-nums text-muted">
+                  {entry.servings} × · {formatCalories(entry.calories)} cal
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </Card>
     </>
   );
