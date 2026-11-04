@@ -4,11 +4,12 @@ import { APIError } from "better-auth/api";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { setRememberedEmail } from "@/lib/remember";
 
 export type AuthFormState = {
   error?: string;
   fieldErrors?: Partial<Record<"name" | "email" | "password", string>>;
-  values?: { name?: string; email?: string };
+  values?: { name?: string; email?: string; rememberMe?: boolean };
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -55,18 +56,23 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
 export async function logInAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
+  const rememberMe = formData.get("rememberMe") === "on";
+  const values = { email, rememberMe };
 
   const fieldErrors: AuthFormState["fieldErrors"] = {};
   if (!email) fieldErrors.email = "Please enter your email.";
   if (!password) fieldErrors.password = "Please enter your password.";
-  if (Object.keys(fieldErrors).length) return { fieldErrors, values: { email } };
+  if (Object.keys(fieldErrors).length) return { fieldErrors, values };
 
   try {
-    await auth.api.signInEmail({ body: { email, password }, headers: await headers() });
+    // rememberMe on: the login lasts after the browser closes. Off: it ends
+    // with the browser session.
+    await auth.api.signInEmail({ body: { email, password, rememberMe }, headers: await headers() });
   } catch (error) {
-    if (error instanceof APIError) return { error: friendlyAuthError(error), values: { email } };
+    if (error instanceof APIError) return { error: friendlyAuthError(error), values };
     throw error;
   }
+  await setRememberedEmail(rememberMe ? email : null);
   redirect("/today");
 }
 

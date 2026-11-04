@@ -10,7 +10,7 @@ Built for my capstone (Classes 1–10). The plan came first ([PLAN.md](PLAN.md))
 
 | Feature | Where |
 |---|---|
-| Sign up, log in, log out (each account sees only its own data) | `/signup`, `/login` |
+| Sign up, log in, log out (each account sees only its own data). **Remember me** keeps you signed in and fills in your email; your browser's password manager fills the password | `/signup`, `/login` |
 | Add, view, edit and delete meals (delete asks "Are you sure?") | `/meals` |
 | Friendly messages for blank or impossible values | meal and log forms |
 | Log servings to any day and see the day's calories and protein | `/today` |
@@ -81,7 +81,7 @@ Open http://localhost:3010 and sign up. Locally there's no `DATABASE_URL`, so th
 npm test
 ```
 
-52 checks, including the two the brief requires:
+54 checks, including the two the brief requires:
 
 - **Data isolation** (`src/lib/data-isolation.test.ts`): User B can't see or open User A's meal.
 - **Dashboard stat** (`src/lib/dashboard.test.ts`): average daily calories counts only the days you logged (2,000 and 2,400 → 2,200).
