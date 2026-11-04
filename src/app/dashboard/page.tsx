@@ -3,7 +3,7 @@ import { ButtonLink, Card, PageHeader } from "@/components/ui";
 import { DASHBOARD_DAYS, getDashboard } from "@/lib/dashboard";
 import { formatCalories, formatGrams } from "@/lib/format";
 import { requireUser } from "@/lib/session";
-import { getCalorieGoal } from "@/lib/goal";
+import { getCalorieGoal, getProteinGoal } from "@/lib/goal";
 import { getStreak } from "@/lib/streak";
 import { today } from "@/lib/today";
 import { CalorieChart } from "./calorie-chart";
@@ -23,9 +23,10 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
 export default async function DashboardPage() {
   const user = await requireUser();
   const todayDay = await today();
-  const [{ days, stats, topMeal, goal }, streak] = await Promise.all([
+  const [{ days, stats, topMeal, goal }, streak, proteinGoal] = await Promise.all([
     getDashboard(user.id, todayDay, await getCalorieGoal(user.id)),
     getStreak(user.id, todayDay),
+    getProteinGoal(user.id),
   ]);
 
   return (
@@ -35,7 +36,11 @@ export default async function DashboardPage() {
 
       <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Stat label="Avg daily calories" value={formatCalories(stats.avgDailyCalories)} sub={`over ${stats.daysLogged} logged day${stats.daysLogged === 1 ? "" : "s"}`} />
-        <Stat label="Avg daily protein" value={`${formatGrams(stats.avgDailyProtein)} g`} />
+        <Stat
+          label="Avg daily protein"
+          value={`${formatGrams(stats.avgDailyProtein)} g`}
+          sub={proteinGoal !== null ? `goal ${proteinGoal} g` : undefined}
+        />
         <Stat
           label="Days on goal"
           value={`${stats.daysOnGoal} / ${stats.daysLogged}`}

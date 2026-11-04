@@ -9,7 +9,7 @@ import { listEntriesForDay, totals } from "@/lib/log";
 import { listMeals } from "@/lib/meals";
 import { requireUser } from "@/lib/session";
 import { today } from "@/lib/today";
-import { getCalorieGoal, goalProgress } from "@/lib/goal";
+import { getCalorieGoal, getProteinGoal, goalProgress } from "@/lib/goal";
 import { getStreak } from "@/lib/streak";
 import { deleteEntryAction } from "./actions";
 import { GoalEditor } from "./goal-form";
@@ -24,11 +24,12 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   const day = isIsoDay(requested) ? requested : todayDay;
   const isToday = day === todayDay;
 
-  const [entries, meals, foods, goal, streak] = await Promise.all([
+  const [entries, meals, foods, goal, proteinGoal, streak] = await Promise.all([
     listEntriesForDay(user.id, day),
     listMeals(user.id),
     listLibraryFoods(user.id),
     getCalorieGoal(user.id),
+    getProteinGoal(user.id),
     getStreak(user.id, todayDay),
   ]);
   const dayTotals = totals(entries);
@@ -84,7 +85,10 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
           </div>
           <div className="text-right">
             <p className="text-sm text-muted">Protein</p>
-            <p className="text-xl font-bold tabular-nums">{formatGrams(dayTotals.proteinG)} g</p>
+            <p className="text-xl font-bold tabular-nums">
+              {formatGrams(dayTotals.proteinG)}
+              {proteinGoal !== null && <span className="text-base font-semibold text-muted"> / {proteinGoal}</span>} g
+            </p>
           </div>
         </div>
         <div
@@ -106,7 +110,12 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
               ? `${formatCalories(progress.over)} over your goal`
               : `${formatCalories(progress.remaining)} left`}
           </p>
-          <GoalEditor goal={goal} />
+          <div className="flex shrink-0 items-center gap-3">
+            <Link href="/setup" className="text-sm font-medium text-accent hover:underline">
+              Set targets
+            </Link>
+            <GoalEditor goal={goal} />
+          </div>
         </div>
       </Card>
 

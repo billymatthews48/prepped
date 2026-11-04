@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "daily_protein_goal" integer;

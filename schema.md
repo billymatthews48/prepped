@@ -6,7 +6,7 @@ Postgres (Neon in production, PGlite locally). Tables are defined in [`src/db/sc
 
 | Table | What one row means | Columns (type) | Primary key |
 |---|---|---|---|
-| **users** | One account | id (text), name (text), email (text, unique), email_verified (true/false), image (text, optional), daily_calorie_goal (number, default 2,200), created_at (date/time), updated_at (date/time) | id |
+| **users** | One account | id (text), name (text), email (text, unique), email_verified (true/false), image (text, optional), daily_calorie_goal (number, default 2,200), daily_protein_goal (number, optional, grams), created_at (date/time), updated_at (date/time) | id |
 | **meals** | A meal I cook or eat repeatedly | id (number), user_id (text), food_id (number, optional), name (text), slot (text: breakfast / lunch / dinner / snack), calories (number, per serving), protein_g (number, per serving), notes (text, optional), created_at, updated_at | id |
 | **foods** | One food in the shared food library (not owned by anyone) | id (number), name (text, unique), serving (text, e.g. "2 large eggs"), slot (text), calories (number, per serving), protein_g (number, per serving) | id |
 | **log_entries** | One time I ate a meal | id (number), user_id (text), meal_id (number), batch_id (number, optional), eaten_on (date), servings (number, default 1), created_at | id |
@@ -58,7 +58,7 @@ These tables exist so login works. I didn't design them.
 
 | Planned | Built so far | Notes |
 |---|---|---|
-| users | ✅ | `daily_calorie_goal` added in Feature 9 (migration `0002_daily_goal.sql`) |
+| users | ✅ | `daily_calorie_goal` added in Feature 9 (migration `0002_daily_goal.sql`). `daily_protein_goal` added with the targets questionnaire (Issue #39, migration `0006_protein_goal.sql`). It's empty until the questionnaire is done |
 | meals | ✅ | As planned. `protein_g` defaults to 0 if left empty |
 | log_entries | ✅ | `batch_id` added in Feature 10 (migration `0003_batches.sql`) |
 | batches | ✅ | Added in Feature 10. As planned, plus a database check that servings made > 0 |

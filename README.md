@@ -21,6 +21,7 @@ Built for my capstone (Classes 1–10). The plan came first ([PLAN.md](PLAN.md))
 | **Meal-prep batches**: record a prep session, and servings left count down as you eat | meal page, `/fridge` |
 | **Logging streak** | `/today`, `/dashboard` |
 | **Food library** (added after the stranger test): 129 common foods in the "Log a meal" dropdown. Adjust the calories and protein before logging, revert to the library numbers, and restore them later from the meal page | `/today`, meal page |
+| **Targets questionnaire** (added after the stranger test): age, sex, height, weight, activity and goal give you a daily calorie and protein target (Mifflin-St Jeor). New accounts see it right after sign-up, with "Skip for now" | `/setup`, "Set targets" on `/today` |
 
 ## How it works
 
@@ -79,7 +80,7 @@ Open http://localhost:3010 and sign up. Locally there's no `DATABASE_URL`, so th
 npm test
 ```
 
-39 checks, including the two the brief requires:
+45 checks, including the two the brief requires:
 
 - **Data isolation** (`src/lib/data-isolation.test.ts`): User B can't see or open User A's meal.
 - **Dashboard stat** (`src/lib/dashboard.test.ts`): average daily calories counts only the days you logged (2,000 and 2,400 → 2,200).
