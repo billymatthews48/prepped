@@ -18,6 +18,23 @@ export async function setCalorieGoal(userId: string, goal: number): Promise<void
   await db.update(users).set({ dailyCalorieGoal: goal, updatedAt: new Date() }).where(eq(users.id, userId));
 }
 
+/** Daily protein goal in grams, or null if the questionnaire hasn't been done. */
+export async function getProteinGoal(userId: string): Promise<number | null> {
+  const [row] = await db
+    .select({ goal: users.dailyProteinGoal })
+    .from(users)
+    .where(eq(users.id, userId));
+  return row?.goal ?? null;
+}
+
+/** Saves both targets from the questionnaire, for this user only. */
+export async function setTargets(userId: string, targets: { calories: number; proteinG: number }): Promise<void> {
+  await db
+    .update(users)
+    .set({ dailyCalorieGoal: targets.calories, dailyProteinGoal: targets.proteinG, updatedAt: new Date() })
+    .where(eq(users.id, userId));
+}
+
 /** A whole number of calories between GOAL_MIN and GOAL_MAX, or a friendly error. */
 export function parseGoal(raw: string): { ok: true; goal: number } | { ok: false; error: string } {
   if (raw.trim() === "") return { ok: false, error: "Enter a daily calorie goal." };

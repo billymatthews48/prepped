@@ -48,7 +48,8 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
     if (error instanceof APIError) return { error: friendlyAuthError(error), values: { name, email } };
     throw error;
   }
-  redirect("/today");
+  // New accounts go to the targets questionnaire first ("Skip for now" goes to Today).
+  redirect("/setup");
 }
 
 export async function logInAction(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {

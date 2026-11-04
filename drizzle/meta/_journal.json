@@ -43,6 +43,13 @@
       "when": 1793767175181,
       "tag": "0005_seed_food_library",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793769116505,
+      "tag": "0006_protein_goal",
+      "breakpoints": true
     }
   ]
 }

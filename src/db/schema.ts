@@ -26,6 +26,8 @@ export const users = pgTable("users", {
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
   dailyCalorieGoal: integer("daily_calorie_goal").notNull().default(2200),
+  // Grams per day, set by the targets questionnaire. Empty until then.
+  dailyProteinGoal: integer("daily_protein_goal"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
