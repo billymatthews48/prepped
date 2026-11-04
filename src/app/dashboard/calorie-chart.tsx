@@ -37,8 +37,11 @@ export function CalorieChart({ days, goal }: { days: DayTotal[]; goal: number })
               })
             }
           />
+          {/* extendDomain stretches the axis to include the goal, so the line
+              still shows when the goal is above every bar (or nothing is logged). */}
           <ReferenceLine
             y={goal}
+            ifOverflow="extendDomain"
             stroke={MUTED}
             strokeDasharray="4 4"
             label={{ value: `Goal ${goal.toLocaleString()}`, position: "insideTopRight", fontSize: 11, fill: MUTED }}
