@@ -9,6 +9,7 @@ import { listMeals } from "@/lib/meals";
 import { requireUser } from "@/lib/session";
 import { today } from "@/lib/today";
 import { getCalorieGoal, goalProgress } from "@/lib/goal";
+import { getStreak } from "@/lib/streak";
 import { deleteEntryAction } from "./actions";
 import { GoalEditor } from "./goal-form";
 import { LogForm } from "./log-form";
@@ -22,10 +23,11 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   const day = isIsoDay(requested) ? requested : todayDay;
   const isToday = day === todayDay;
 
-  const [entries, meals, goal] = await Promise.all([
+  const [entries, meals, goal, streak] = await Promise.all([
     listEntriesForDay(user.id, day),
     listMeals(user.id),
     getCalorieGoal(user.id),
+    getStreak(user.id, todayDay),
   ]);
   const dayTotals = totals(entries);
   const progress = goalProgress(dayTotals.calories, goal);
@@ -43,7 +45,17 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
         <div className="text-center">
           <h1 className="text-2xl font-bold tracking-tight">{isToday ? "Today" : formatDay(day)}</h1>
           {isToday ? (
-            <p className="text-sm text-muted">{formatDay(day)}</p>
+            <p className="text-sm text-muted">
+              {formatDay(day)}
+              {streak.current > 0 && (
+                <span
+                  className="ml-2 inline-flex items-center gap-1 rounded-full bg-warn-soft px-2 py-0.5 text-xs font-semibold text-warn"
+                  title={streak.loggedToday ? "Days in a row with a logged meal" : "Log something today to keep it going"}
+                >
+                  🔥 {streak.current}-day streak
+                </span>
+              )}
+            </p>
           ) : (
             <Link href="/today" className="text-sm font-medium text-accent hover:underline">
               Back to today
