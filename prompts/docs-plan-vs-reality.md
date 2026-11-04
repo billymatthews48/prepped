@@ -18,3 +18,9 @@ Agent: Claude Code (desktop app). Tue Nov 3, 2026.
 
 - The "Learning" column is in my voice. Edit anything that isn't what I actually took away.
 - Is "Changed" vs "Shipped" fair for each row?
+
+## Update after the stranger test
+
+**Me:** "You merge them" (PR #38, the stranger-test fix, and this PR)
+
+**Agent:** merged PR #38 first, then added two rows for work that wasn't in the plan, the food library (PR #38) and the phone layout fix (PR #36). It also updated the extra-test count to 37 (39 tests in total).
