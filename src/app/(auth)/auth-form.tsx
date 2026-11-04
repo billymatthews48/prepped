@@ -10,12 +10,16 @@ type Mode = "signup" | "login";
 export function AuthForm({
   mode,
   action,
+  rememberedEmail,
 }: {
   mode: Mode;
   action: (prev: AuthFormState, formData: FormData) => Promise<AuthFormState>;
+  /** Filled in on the login page after a "Remember me" login. */
+  rememberedEmail?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
   const isSignup = mode === "signup";
+  const email = state.values?.email ?? rememberedEmail;
 
   return (
     <Card className="mx-auto w-full max-w-sm">
@@ -36,12 +40,14 @@ export function AuthForm({
             error={state.fieldErrors?.name}
           />
         )}
+        {/* autocomplete="username" + "current-password"/"new-password" is what
+            browsers and password managers look for to offer saving and filling. */}
         <Field
           label="Email"
           name="email"
           type="email"
-          autoComplete="email"
-          defaultValue={state.values?.email}
+          autoComplete="username"
+          defaultValue={email}
           error={state.fieldErrors?.email}
         />
         <Field
@@ -49,9 +55,22 @@ export function AuthForm({
           name="password"
           type="password"
           autoComplete={isSignup ? "new-password" : "current-password"}
+          autoFocus={!isSignup && Boolean(rememberedEmail)}
           hint={isSignup ? "At least 8 characters." : undefined}
           error={state.fieldErrors?.password}
         />
+        {!isSignup && (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="rememberMe"
+              defaultChecked={state.values?.rememberMe ?? true}
+              className="h-4 w-4 accent-accent"
+            />
+            Remember me
+            <span className="text-muted">(stay signed in and fill in my email)</span>
+          </label>
+        )}
         <Button type="submit" disabled={pending}>
           {pending ? "One moment…" : isSignup ? "Sign up" : "Log in"}
         </Button>
