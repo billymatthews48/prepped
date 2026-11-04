@@ -8,7 +8,8 @@ import { SLOT_LABELS, formatCalories, formatGrams } from "@/lib/format";
 import { listEntriesForDay, totals } from "@/lib/log";
 import { listMeals } from "@/lib/meals";
 import { requireUser } from "@/lib/session";
-import { today } from "@/lib/today";
+import { daySummary, firstName, hourIn, timeOfDayGreeting } from "@/lib/greeting";
+import { today, visitorTimeZone } from "@/lib/today";
 import { getCalorieGoal, getProteinGoal, goalProgress } from "@/lib/goal";
 import { getStreak } from "@/lib/streak";
 import { deleteEntryAction } from "./actions";
@@ -34,9 +35,27 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   ]);
   const dayTotals = totals(entries);
   const progress = goalProgress(dayTotals.calories, goal);
+  const hour = hourIn(await visitorTimeZone());
 
   return (
     <div className="flex flex-col gap-5">
+      {isToday && (
+        <div>
+          <p className="text-2xl font-bold tracking-tight sm:text-3xl">
+            {timeOfDayGreeting(hour)}, {firstName(user.name)}
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            {daySummary({
+              entries: entries.length,
+              calories: dayTotals.calories,
+              calorieGoal: goal,
+              proteinG: dayTotals.proteinG,
+              proteinGoal,
+            })}
+          </p>
+        </div>
+      )}
+
       <div className="flex items-center justify-between gap-2">
         <Link
           href={`/today?date=${addDays(day, -1)}`}
