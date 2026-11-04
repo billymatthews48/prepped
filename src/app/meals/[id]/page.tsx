@@ -9,7 +9,12 @@ import { getMeal } from "@/lib/meals";
 import { requireUser } from "@/lib/session";
 import { starredMealIds } from "@/lib/stars";
 import { StarButton } from "@/components/star-button";
+import { ServingsMeter } from "@/components/servings-meter";
+import { listBatchesForMeal } from "@/lib/batches";
+import { today } from "@/lib/today";
 import { deleteMealAction } from "../actions";
+import { createBatchAction, deleteBatchAction } from "../batch-actions";
+import { BatchForm } from "./batch-form";
 import { DeleteMealButton } from "./delete-button";
 import { QuickLogButton } from "./quick-log";
 
@@ -20,9 +25,11 @@ export default async function MealPage({ params }: PageProps<"/meals/[id]">) {
   const mealId = Number((await params).id);
   const meal = Number.isInteger(mealId) ? await getMeal(user.id, mealId) : null;
   if (!meal) notFound();
-  const [history, starredIds] = await Promise.all([
+  const [history, starredIds, batchList, todayDay] = await Promise.all([
     listEntriesForMeal(user.id, meal.id),
     starredMealIds(user.id),
+    listBatchesForMeal(user.id, meal.id),
+    today(),
   ]);
   const starred = starredIds.has(meal.id);
 
@@ -60,6 +67,29 @@ export default async function MealPage({ params }: PageProps<"/meals/[id]">) {
           </ButtonLink>
           <DeleteMealButton mealName={meal.name} action={deleteMealAction.bind(null, meal.id)} />
         </div>
+      </Card>
+
+      <Card className="mt-5">
+        <h2 className="mb-1 font-semibold">Meal-prep batches</h2>
+        <p className="mb-4 text-sm text-muted">
+          Record a prep session. Logging this meal uses up the oldest batch first.
+        </p>
+        <BatchForm action={createBatchAction.bind(null, meal.id)} defaultDay={todayDay} />
+        {batchList.length > 0 && (
+          <ul className="mt-4 divide-y divide-border">
+            {batchList.map((batch) => (
+              <li key={batch.id} className="flex items-center gap-4 py-3">
+                <span className="w-24 shrink-0 text-sm">{formatDay(batch.preppedOn)}</span>
+                <ServingsMeter left={batch.servingsLeft} made={batch.servingsMade} />
+                <form action={deleteBatchAction.bind(null, batch.id, meal.id)}>
+                  <button type="submit" className="text-sm text-muted hover:text-danger">
+                    Remove
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
       </Card>
 
       <Card className="mt-5">
