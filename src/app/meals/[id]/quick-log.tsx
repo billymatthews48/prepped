@@ -16,7 +16,7 @@ export function QuickLogButton({
   const [state, formAction, pending] = useActionState(logMealAction, {});
   return (
     <form action={formAction}>
-      <input type="hidden" name="mealId" value={mealId} />
+      <input type="hidden" name="pick" value={`meal:${mealId}`} />
       <input type="hidden" name="servings" value={1} />
       {batchId !== undefined && <input type="hidden" name="batchId" value={batchId} />}
       <Button type="submit" disabled={pending}>

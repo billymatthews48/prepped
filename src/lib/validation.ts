@@ -54,6 +54,20 @@ export function parseMeal(values: Record<MealField, string>): MealParseResult {
   return { ok: false, fieldErrors };
 }
 
+const macrosSchema = mealSchema.pick({ calories: true, proteinG: true });
+
+/**
+ * Calories and protein typed in when logging a library food. Same rules as the
+ * meal form; returns the first problem as one message.
+ */
+export function parseMacros(values: { calories: string; proteinG: string }):
+  | { ok: true; data: { calories: number; proteinG: number } }
+  | { ok: false; error: string } {
+  const result = macrosSchema.safeParse(values);
+  if (result.success) return { ok: true, data: result.data };
+  return { ok: false, error: result.error.issues[0].message };
+}
+
 /** Servings for a log entry: blank means 1; otherwise a number above 0, at most 20. */
 export function parseServings(raw: string): { ok: true; servings: number } | { ok: false; error: string } {
   if (raw.trim() === "") return { ok: true, servings: 1 };

@@ -20,6 +20,7 @@ Built for my capstone (Classes 1–10). The plan came first ([PLAN.md](PLAN.md))
 | **Daily goal + progress bar** ("1,450 / 2,200 · 750 left") | `/today` |
 | **Meal-prep batches**: record a prep session, and servings left count down as you eat | meal page, `/fridge` |
 | **Logging streak** | `/today`, `/dashboard` |
+| **Food library** (added after the stranger test): 129 common foods in the "Log a meal" dropdown. Adjust the calories and protein before logging, revert to the library numbers, and restore them later from the meal page | `/today`, meal page |
 
 ## How it works
 
@@ -30,7 +31,7 @@ Browser ──(forms / clicks)──▶ Next.js server actions ──▶ src/lib
 ```
 
 - **Taking in data:** every form (sign up, add meal, log a serving, set a goal, add a batch) posts to a **server action** on the Next.js server. The action first finds the signed-in user from the login cookie, then checks the input (`src/lib/validation.ts`). If something's wrong, it sends back a friendly message for that field.
-- **Storing data:** five tables in Postgres (`users`, `meals`, `log_entries`, `batches`, `stars`), described in [schema.md](schema.md). The database also enforces the basics itself (calories > 0, servings > 0, valid slot), so a bug in the app can't save nonsense.
+- **Storing data:** six tables in Postgres (`users`, `meals`, `log_entries`, `batches`, `stars`, and the shared, read-only `foods` library), described in [schema.md](schema.md). The database also enforces the basics itself (calories > 0, servings > 0, valid slot), so a bug in the app can't save nonsense.
 - **Keeping it private:** every function in `src/lib/` takes the signed-in user's id and filters on it. An id in the URL is never enough on its own. An automated test proves User B can't see User A's meals.
 - **Calculated, not stored:** calories for an entry (meal × servings), daily totals, averages, servings left in a batch and streaks are all worked out from the log when you load a page, so they can't fall out of sync.
 
@@ -78,7 +79,7 @@ Open http://localhost:3010 and sign up. Locally there's no `DATABASE_URL`, so th
 npm test
 ```
 
-34 checks, including the two the brief requires:
+39 checks, including the two the brief requires:
 
 - **Data isolation** (`src/lib/data-isolation.test.ts`): User B can't see or open User A's meal.
 - **Dashboard stat** (`src/lib/dashboard.test.ts`): average daily calories counts only the days you logged (2,000 and 2,400 → 2,200).

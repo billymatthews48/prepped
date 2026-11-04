@@ -14,7 +14,8 @@ const LINKS = [
 export function Nav() {
   const pathname = usePathname();
   return (
-    <nav className="flex items-center gap-1 overflow-x-auto">
+    // Phones: five equal columns so every tab is visible. Wider screens: a row.
+    <nav className="grid grid-cols-5 gap-1 sm:flex sm:items-center">
       {LINKS.map((link) => {
         const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
         return (
@@ -22,7 +23,7 @@ export function Nav() {
             key={link.href}
             href={link.href}
             aria-current={active ? "page" : undefined}
-            className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`whitespace-nowrap rounded-lg px-1 py-1.5 text-center text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
               active ? "bg-accent-soft text-accent-strong" : "text-muted hover:text-foreground"
             }`}
           >

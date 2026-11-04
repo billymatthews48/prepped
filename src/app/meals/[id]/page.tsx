@@ -12,7 +12,8 @@ import { StarButton } from "@/components/star-button";
 import { ServingsMeter } from "@/components/servings-meter";
 import { listBatchesForMeal } from "@/lib/batches";
 import { today } from "@/lib/today";
-import { deleteMealAction } from "../actions";
+import { getFood } from "@/lib/foods";
+import { deleteMealAction, restoreLibraryAction } from "../actions";
 import { createBatchAction, deleteBatchAction } from "../batch-actions";
 import { BatchForm } from "./batch-form";
 import { DeleteMealButton } from "./delete-button";
@@ -25,11 +26,12 @@ export default async function MealPage({ params }: PageProps<"/meals/[id]">) {
   const mealId = Number((await params).id);
   const meal = Number.isInteger(mealId) ? await getMeal(user.id, mealId) : null;
   if (!meal) notFound();
-  const [history, starredIds, batchList, todayDay] = await Promise.all([
+  const [history, starredIds, batchList, todayDay, food] = await Promise.all([
     listEntriesForMeal(user.id, meal.id),
     starredMealIds(user.id),
     listBatchesForMeal(user.id, meal.id),
     today(),
+    meal.foodId ? getFood(meal.foodId) : null,
   ]);
   const starred = starredIds.has(meal.id);
 
@@ -57,6 +59,22 @@ export default async function MealPage({ params }: PageProps<"/meals/[id]">) {
             <dd className="text-2xl font-bold tabular-nums">{formatGrams(meal.proteinG)} g</dd>
           </div>
         </dl>
+
+        {food && (
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-border px-4 py-3 text-sm">
+            <span className="text-muted">
+              From the food library: 1 serving = {food.serving} ({formatCalories(food.calories)} cal ·{" "}
+              {formatGrams(food.proteinG)} g)
+            </span>
+            {(meal.calories !== food.calories || meal.proteinG !== food.proteinG) && (
+              <form action={restoreLibraryAction.bind(null, meal.id)}>
+                <button type="submit" className="font-medium text-accent hover:underline">
+                  Restore library values
+                </button>
+              </form>
+            )}
+          </div>
+        )}
 
         {meal.notes && <p className="mb-5 whitespace-pre-wrap text-sm">{meal.notes}</p>}
 
