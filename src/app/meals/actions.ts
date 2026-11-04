@@ -1,6 +1,8 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { restoreLibraryValues } from "@/lib/foods";
 import { createMeal, deleteMeal, updateMeal } from "@/lib/meals";
 import { requireUser } from "@/lib/session";
 import { parseMeal, type MealFieldErrors } from "@/lib/validation";
@@ -62,6 +64,14 @@ export async function updateMealAction(
   }
   if (!updated) return { error: "That meal no longer exists.", values };
   redirect(`/meals/${mealId}`);
+}
+
+/** Puts the food library's calories and protein back on a meal copied from it. */
+export async function restoreLibraryAction(mealId: number) {
+  const user = await requireUser();
+  await restoreLibraryValues(user.id, mealId);
+  revalidatePath(`/meals/${mealId}`);
+  revalidatePath("/today");
 }
 
 export async function deleteMealAction(mealId: number) {

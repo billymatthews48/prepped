@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ButtonLink, Card } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { MEAL_SLOTS } from "@/db/schema";
 import { addDays, formatDay, isIsoDay } from "@/lib/dates";
+import { listLibraryFoods } from "@/lib/foods";
 import { SLOT_LABELS, formatCalories, formatGrams } from "@/lib/format";
 import { listEntriesForDay, totals } from "@/lib/log";
 import { listMeals } from "@/lib/meals";
@@ -23,9 +24,10 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   const day = isIsoDay(requested) ? requested : todayDay;
   const isToday = day === todayDay;
 
-  const [entries, meals, goal, streak] = await Promise.all([
+  const [entries, meals, foods, goal, streak] = await Promise.all([
     listEntriesForDay(user.id, day),
     listMeals(user.id),
+    listLibraryFoods(user.id),
     getCalorieGoal(user.id),
     getStreak(user.id, todayDay),
   ]);
@@ -110,14 +112,14 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
 
       <Card>
         <h2 className="mb-3 font-semibold">Log a meal</h2>
-        {meals.length === 0 ? (
-          <div className="flex flex-col items-start gap-3">
-            <p className="text-sm text-muted">Add a meal first, then log servings of it here.</p>
-            <ButtonLink href="/meals/new">Add a meal</ButtonLink>
-          </div>
-        ) : (
-          <LogForm meals={meals} day={day} />
-        )}
+        {/* Keyed on the entry count so the form starts fresh after each log. */}
+        <LogForm key={`${day}-${entries.length}`} meals={meals} foods={foods} day={day} />
+        <p className="mt-3 text-sm text-muted">
+          Not in the list?{" "}
+          <Link href="/meals/new" className="font-medium text-accent hover:underline">
+            Create your own meal
+          </Link>
+        </p>
       </Card>
 
       <Card>

@@ -29,6 +29,20 @@
       "when": 1793750860833,
       "tag": "0003_batches",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793767171371,
+      "tag": "0004_food_library",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793767175181,
+      "tag": "0005_seed_food_library",
+      "breakpoints": true
     }
   ]
 }

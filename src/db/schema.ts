@@ -78,6 +78,28 @@ export const verifications = pgTable("verifications", {
 export const MEAL_SLOTS = ["breakfast", "lunch", "dinner", "snack"] as const;
 export type MealSlot = (typeof MEAL_SLOTS)[number];
 
+/**
+ * The food library: common foods with typical nutrition per serving, shared by
+ * everyone and read-only in the app. Picking one copies it into my own meals,
+ * so my edits never change the library for anyone else.
+ */
+export const foods = pgTable(
+  "foods",
+  {
+    id: serial("id").primaryKey(),
+    name: text("name").notNull().unique(),
+    serving: text("serving").notNull(),
+    slot: text("slot").$type<MealSlot>().notNull(),
+    calories: integer("calories").notNull(),
+    proteinG: doublePrecision("protein_g").notNull().default(0),
+  },
+  (t) => [
+    check("foods_calories_positive", sql`${t.calories} > 0`),
+    check("foods_protein_not_negative", sql`${t.proteinG} >= 0`),
+    check("foods_slot_valid", sql`${t.slot} in ('breakfast', 'lunch', 'dinner', 'snack')`),
+  ],
+);
+
 /** A meal I cook or eat repeatedly, with nutrition per serving. */
 export const meals = pgTable(
   "meals",
@@ -86,6 +108,9 @@ export const meals = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    // Set when the meal was copied from the food library, so I can restore
+    // the library's numbers later. Empty for meals I made myself.
+    foodId: integer("food_id").references(() => foods.id, { onDelete: "set null" }),
     name: text("name").notNull(),
     slot: text("slot").$type<MealSlot>().notNull(),
     calories: integer("calories").notNull(),
@@ -165,6 +190,7 @@ export const stars = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.mealId] })],
 );
 
+export type Food = typeof foods.$inferSelect;
 export type Meal = typeof meals.$inferSelect;
 export type LogEntry = typeof logEntries.$inferSelect;
 export type Batch = typeof batches.$inferSelect;
