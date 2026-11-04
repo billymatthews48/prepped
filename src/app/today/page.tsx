@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Card } from "@/components/ui";
+import { ButtonLink, Card } from "@/components/ui";
 import { MEAL_SLOTS } from "@/db/schema";
 import { addDays, formatDay, isIsoDay } from "@/lib/dates";
 import { listLibraryFoods } from "@/lib/foods";
@@ -93,6 +93,22 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
         </Link>
       </div>
 
+      {/* Until the questionnaire is done, make it hard to miss. */}
+      {proteinGoal === null && (
+        <div className="flex flex-col gap-4 rounded-2xl border border-accent bg-accent-soft p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-lg font-bold text-accent-strong">Get your personal targets</p>
+            <p className="mt-1 text-sm">
+              Six quick questions, and Prepped works out your daily calories and protein. Right now your goal is
+              {" "}{formatCalories(goal)} calories, with no protein goal.
+            </p>
+          </div>
+          <ButtonLink href="/setup" className="shrink-0 !px-6 !py-3 !text-base">
+            Set my targets
+          </ButtonLink>
+        </div>
+      )}
+
       <Card>
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
@@ -130,9 +146,11 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
               : `${formatCalories(progress.remaining)} left`}
           </p>
           <div className="flex shrink-0 items-center gap-3">
-            <Link href="/setup" className="text-sm font-medium text-accent hover:underline">
-              Set targets
-            </Link>
+            {proteinGoal !== null && (
+              <ButtonLink href="/setup" variant="secondary" className="!px-3 !py-1.5">
+                Redo targets
+              </ButtonLink>
+            )}
             <GoalEditor goal={goal} />
           </div>
         </div>
