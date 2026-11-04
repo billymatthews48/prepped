@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { goalProgress, parseGoal } from "./goal";
 import { parseMeal, parseServings } from "./validation";
 
 const valid = { name: "Chicken & rice", slot: "lunch", calories: "550", proteinG: "42", notes: "" };
@@ -37,5 +38,22 @@ describe("servings validation", () => {
     ["-1", { ok: false, error: "Servings must be more than 0." }],
   ])("%j", (raw, expected) => {
     expect(parseServings(raw)).toEqual(expected);
+  });
+});
+
+describe("daily goal", () => {
+  it.each([
+    ["2200", { ok: true, goal: 2200 }],
+    ["1999.6", { ok: true, goal: 2000 }],
+    ["", { ok: false, error: "Enter a daily calorie goal." }],
+    ["500", { ok: false, error: "Pick a goal between 800 and 6,000 calories." }],
+    ["abc", { ok: false, error: "Your goal needs to be a number." }],
+  ])("%j", (raw, expected) => {
+    expect(parseGoal(raw)).toEqual(expected);
+  });
+
+  it("shows calories left, or over, against the goal", () => {
+    expect(goalProgress(1450, 2200)).toEqual({ percent: 66, remaining: 750, over: 0, isOver: false });
+    expect(goalProgress(2320, 2200)).toEqual({ percent: 100, remaining: 0, over: 120, isOver: true });
   });
 });

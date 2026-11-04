@@ -25,6 +25,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
+  dailyCalorieGoal: integer("daily_calorie_goal").notNull().default(2200),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

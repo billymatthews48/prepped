@@ -8,7 +8,9 @@ import { listEntriesForDay, totals } from "@/lib/log";
 import { listMeals } from "@/lib/meals";
 import { requireUser } from "@/lib/session";
 import { today } from "@/lib/today";
+import { getCalorieGoal, goalProgress } from "@/lib/goal";
 import { deleteEntryAction } from "./actions";
+import { GoalEditor } from "./goal-form";
 import { LogForm } from "./log-form";
 
 export const metadata: Metadata = { title: "Today · Prepped" };
@@ -20,8 +22,13 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
   const day = isIsoDay(requested) ? requested : todayDay;
   const isToday = day === todayDay;
 
-  const [entries, meals] = await Promise.all([listEntriesForDay(user.id, day), listMeals(user.id)]);
+  const [entries, meals, goal] = await Promise.all([
+    listEntriesForDay(user.id, day),
+    listMeals(user.id),
+    getCalorieGoal(user.id),
+  ]);
   const dayTotals = totals(entries);
+  const progress = goalProgress(dayTotals.calories, goal);
 
   return (
     <div className="flex flex-col gap-5">
@@ -52,19 +59,42 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Card>
-          <p className="text-sm text-muted">Calories</p>
-          <p className="text-3xl font-bold tabular-nums">{formatCalories(dayTotals.calories)}</p>
-        </Card>
-        <Card>
-          <p className="text-sm text-muted">Protein</p>
-          <p className="text-3xl font-bold tabular-nums">
-            {formatGrams(dayTotals.proteinG)}
-            <span className="text-lg font-semibold text-muted"> g</span>
+      <Card>
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-sm text-muted">Calories</p>
+            <p className="text-3xl font-bold tabular-nums">
+              {formatCalories(dayTotals.calories)}
+              <span className="text-lg font-semibold text-muted"> / {formatCalories(goal)}</span>
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-muted">Protein</p>
+            <p className="text-xl font-bold tabular-nums">{formatGrams(dayTotals.proteinG)} g</p>
+          </div>
+        </div>
+        <div
+          role="progressbar"
+          aria-label="Calories eaten toward your daily goal"
+          aria-valuemin={0}
+          aria-valuemax={goal}
+          aria-valuenow={Math.round(dayTotals.calories)}
+          className="h-3 w-full overflow-hidden rounded-full bg-background"
+        >
+          <div
+            className={`h-full rounded-full transition-[width] duration-500 ${progress.isOver ? "bg-warn" : "bg-accent"}`}
+            style={{ width: `${progress.percent}%` }}
+          />
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <p className={`text-sm font-medium ${progress.isOver ? "text-warn" : "text-muted"}`}>
+            {progress.isOver
+              ? `${formatCalories(progress.over)} over your goal`
+              : `${formatCalories(progress.remaining)} left`}
           </p>
-        </Card>
-      </div>
+          <GoalEditor goal={goal} />
+        </div>
+      </Card>
 
       <Card>
         <h2 className="mb-3 font-semibold">Log a meal</h2>
