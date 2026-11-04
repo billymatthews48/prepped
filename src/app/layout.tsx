@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { logOutAction } from "@/app/(auth)/actions";
+import { Avatar } from "@/components/avatar";
 import { Nav } from "@/components/nav";
+import { firstName } from "@/lib/greeting";
 import { TimeZoneCookie } from "@/components/time-zone-cookie";
 import { getUser } from "@/lib/session";
 import "./globals.css";
@@ -39,7 +41,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             </Link>
             {user ? (
               <div className="flex items-center gap-3">
-                <span className="hidden text-sm text-muted sm:inline">{user.name}</span>
+                <Link
+                  href="/profile"
+                  aria-label={`Your profile (${user.name})`}
+                  className="flex items-center gap-2 rounded-full py-0.5 pl-0.5 pr-3 text-sm font-semibold hover:bg-background"
+                >
+                  <Avatar name={user.name} />
+                  <span className="max-w-32 truncate">{firstName(user.name)}</span>
+                </Link>
                 <form action={logOutAction}>
                   <button type="submit" className="text-sm font-medium text-muted hover:text-foreground">
                     Log out
