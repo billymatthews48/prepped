@@ -22,10 +22,14 @@ export async function logMealAction(_prev: LogFormState, formData: FormData): Pr
   if (!parsedServings.ok) return { error: parsedServings.error };
   const servings = parsedServings.servings;
 
-  const entry = await logMeal(user.id, { mealId, eatenOn, servings });
+  const rawBatch = Number(formData.get("batchId"));
+  const batchId = Number.isInteger(rawBatch) && rawBatch > 0 ? rawBatch : undefined;
+
+  const entry = await logMeal(user.id, { mealId, eatenOn, servings, batchId });
   if (!entry) return { error: "That meal doesn't exist anymore." };
 
   revalidatePath("/today");
+  revalidatePath("/fridge");
   redirect(`/today?date=${eatenOn}`);
 }
 
@@ -46,4 +50,5 @@ export async function deleteEntryAction(entryId: number) {
   const user = await requireUser();
   await deleteEntry(user.id, entryId);
   revalidatePath("/today");
+  revalidatePath("/fridge");
 }

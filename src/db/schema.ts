@@ -103,6 +103,27 @@ export const meals = pgTable(
   ],
 );
 
+/** A meal-prep session: "Sunday I made 5 servings of chicken & rice". */
+export const batches = pgTable(
+  "batches",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    mealId: integer("meal_id")
+      .notNull()
+      .references(() => meals.id, { onDelete: "cascade" }),
+    servingsMade: doublePrecision("servings_made").notNull(),
+    preppedOn: date("prepped_on", { mode: "string" }).notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("batches_user_meal_idx").on(t.userId, t.mealId),
+    check("batches_servings_made_positive", sql`${t.servingsMade} > 0`),
+  ],
+);
+
 /** One time I ate a meal: which meal, which day, how many servings. */
 export const logEntries = pgTable(
   "log_entries",
@@ -114,6 +135,9 @@ export const logEntries = pgTable(
     mealId: integer("meal_id")
       .notNull()
       .references(() => meals.id, { onDelete: "cascade" }),
+    // Which prep batch the serving came from, if any. Removing a batch keeps
+    // the log entry (I still ate it); it just stops pointing at the batch.
+    batchId: integer("batch_id").references(() => batches.id, { onDelete: "set null" }),
     eatenOn: date("eaten_on", { mode: "string" }).notNull(),
     servings: doublePrecision("servings").notNull().default(1),
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -121,6 +145,7 @@ export const logEntries = pgTable(
   (t) => [
     index("log_entries_user_day_idx").on(t.userId, t.eatenOn),
     index("log_entries_meal_idx").on(t.mealId),
+    index("log_entries_batch_idx").on(t.batchId),
     check("log_entries_servings_positive", sql`${t.servings} > 0`),
   ],
 );
@@ -142,3 +167,4 @@ export const stars = pgTable(
 
 export type Meal = typeof meals.$inferSelect;
 export type LogEntry = typeof logEntries.$inferSelect;
+export type Batch = typeof batches.$inferSelect;

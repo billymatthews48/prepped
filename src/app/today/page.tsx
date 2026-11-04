@@ -129,6 +129,7 @@ export default async function TodayPage({ searchParams }: PageProps<"/today">) {
                           <span className="block truncate">{entry.mealName}</span>
                           <span className="text-xs text-muted">
                             {entry.servings} serving{entry.servings === 1 ? "" : "s"}
+                            {entry.batchPreppedOn && ` · from ${formatDay(entry.batchPreppedOn)} prep`}
                           </span>
                         </Link>
                         <div className="flex shrink-0 items-center gap-2">
