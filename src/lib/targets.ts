@@ -71,39 +71,81 @@ export function computeTargets(answers: TargetAnswers): Targets {
   };
 }
 
-export type TargetField = "sex" | "age" | "height" | "weight" | "activity" | "goal";
-export type TargetFormValues = Record<"sex" | "age" | "heightFt" | "heightIn" | "weight" | "activity" | "goal", string>;
+export const UNITS = {
+  imperial: "Imperial (ft, in, lb)",
+  metric: "Metric (cm, kg)",
+} as const;
+export type Units = keyof typeof UNITS;
+
+export type TargetField = "sex" | "dob" | "height" | "weight" | "activity" | "goal";
+export type TargetFormValues = Record<
+  "units" | "sex" | "dob" | "heightFt" | "heightIn" | "heightCm" | "weight" | "activity" | "goal",
+  string
+>;
 export type TargetParseResult =
   | { ok: true; answers: TargetAnswers }
   | { ok: false; fieldErrors: Partial<Record<TargetField, string>> };
 
 const LB_TO_KG = 0.45359237;
 const IN_TO_CM = 2.54;
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 
-/** Checks the form (US units: feet, inches, pounds) and converts it to metric. */
-export function parseTargetAnswers(values: TargetFormValues): TargetParseResult {
+/**
+ * Whole years between a date of birth and today ("YYYY-MM-DD" strings).
+ * If this year's birthday hasn't happened yet, that's one year fewer.
+ */
+export function ageOn(dob: string, today: string): number {
+  const [by, bm, bd] = dob.split("-").map(Number);
+  const [ty, tm, td] = today.split("-").map(Number);
+  const birthdayPassed = tm > bm || (tm === bm && td >= bd);
+  return ty - by - (birthdayPassed ? 0 : 1);
+}
+
+function isRealDay(value: string): boolean {
+  if (!ISO_DAY.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
+}
+
+/**
+ * Checks the form and converts it to metric. Height and weight are read in
+ * the units picked (imperial: feet + inches and pounds; metric: cm and kg),
+ * and age comes from the date of birth as of `today` in the user's time zone.
+ */
+export function parseTargetAnswers(values: TargetFormValues, today: string): TargetParseResult {
   const fieldErrors: Partial<Record<TargetField, string>> = {};
   const num = (raw: string) => (raw.trim() === "" ? NaN : Number(raw));
+  const metric = values.units === "metric";
 
   if (!(values.sex in SEXES)) fieldErrors.sex = "Pick one. The calorie formula uses it.";
 
-  const age = num(values.age);
-  if (!Number.isFinite(age)) fieldErrors.age = "Enter your age.";
-  else if (age < 18) fieldErrors.age = "This calculator is for adults, 18 and over.";
-  else if (age > 100) fieldErrors.age = "Enter an age of 100 or under.";
-
-  const feet = num(values.heightFt);
-  const inches = values.heightIn.trim() === "" ? 0 : Number(values.heightIn);
-  const heightCm = (feet * 12 + inches) * IN_TO_CM;
-  if (!Number.isFinite(feet) || !Number.isFinite(inches) || inches < 0 || inches >= 12) {
-    fieldErrors.height = "Enter your height in feet and inches.";
-  } else if (heightCm < 120 || heightCm > 230) {
-    fieldErrors.height = "Double-check your height.";
+  let age = NaN;
+  if (!isRealDay(values.dob)) fieldErrors.dob = "Enter your date of birth.";
+  else if (values.dob > today) fieldErrors.dob = "That date is in the future.";
+  else {
+    age = ageOn(values.dob, today);
+    if (age < 18) fieldErrors.dob = "This calculator is for adults, 18 and over.";
+    else if (age > 100) fieldErrors.dob = "Double-check your date of birth.";
   }
 
-  const pounds = num(values.weight);
-  if (!Number.isFinite(pounds)) fieldErrors.weight = "Enter your weight in pounds.";
-  else if (pounds < 70 || pounds > 700) fieldErrors.weight = "Double-check your weight.";
+  let heightCm = NaN;
+  if (metric) {
+    heightCm = num(values.heightCm);
+    if (!Number.isFinite(heightCm)) fieldErrors.height = "Enter your height in centimetres.";
+  } else {
+    const feet = num(values.heightFt);
+    const inches = values.heightIn.trim() === "" ? 0 : Number(values.heightIn);
+    heightCm = (feet * 12 + inches) * IN_TO_CM;
+    if (!Number.isFinite(feet) || !Number.isFinite(inches) || inches < 0 || inches >= 12) {
+      fieldErrors.height = "Enter your height in feet and inches.";
+    }
+  }
+  if (!fieldErrors.height && (heightCm < 120 || heightCm > 230)) fieldErrors.height = "Double-check your height.";
+
+  const rawWeight = num(values.weight);
+  const weightKg = metric ? rawWeight : rawWeight * LB_TO_KG;
+  if (!Number.isFinite(rawWeight)) fieldErrors.weight = `Enter your weight in ${metric ? "kilograms" : "pounds"}.`;
+  else if (weightKg < 30 || weightKg > 320) fieldErrors.weight = "Double-check your weight.";
 
   if (!(values.activity in ACTIVITY_LEVELS)) fieldErrors.activity = "Pick how active you are.";
   if (!(values.goal in GOALS)) fieldErrors.goal = "Pick a goal.";
@@ -113,9 +155,9 @@ export function parseTargetAnswers(values: TargetFormValues): TargetParseResult 
     ok: true,
     answers: {
       sex: values.sex as Sex,
-      age: Math.round(age),
+      age,
       heightCm,
-      weightKg: pounds * LB_TO_KG,
+      weightKg,
       activity: values.activity as ActivityLevel,
       goal: values.goal as Goal,
     },

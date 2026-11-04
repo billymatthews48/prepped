@@ -8,10 +8,12 @@ import {
   CALORIE_FLOOR,
   GOALS,
   SEXES,
+  UNITS,
   computeTargets,
   parseTargetAnswers,
   type TargetField,
   type TargetFormValues,
+  type Units,
 } from "@/lib/targets";
 import { saveTargetsAction } from "./actions";
 
@@ -64,24 +66,55 @@ function SelectField({
 const labels = <T extends Record<string, { label: string }>>(items: T) =>
   Object.fromEntries(Object.entries(items).map(([key, item]) => [key, item.label]));
 
+const LB_PER_KG = 2.20462;
+const round1 = (n: number) => String(Math.round(n * 10) / 10);
+
+/** Converts whatever height and weight are typed in when the units switch. */
+function convertUnits(values: TargetFormValues, to: Units): TargetFormValues {
+  const num = (raw: string) => (raw.trim() === "" ? NaN : Number(raw));
+  if (to === "metric") {
+    const inches = num(values.heightFt) * 12 + (num(values.heightIn) || 0);
+    const pounds = num(values.weight);
+    return {
+      ...values,
+      units: to,
+      heightCm: Number.isFinite(inches) ? String(Math.round(inches * 2.54)) : values.heightCm,
+      weight: Number.isFinite(pounds) ? round1(pounds / LB_PER_KG) : values.weight,
+    };
+  }
+  const totalInches = Math.round(num(values.heightCm) / 2.54);
+  const kg = num(values.weight);
+  return {
+    ...values,
+    units: to,
+    heightFt: Number.isFinite(totalInches) ? String(Math.floor(totalInches / 12)) : values.heightFt,
+    heightIn: Number.isFinite(totalInches) ? String(totalInches % 12) : values.heightIn,
+    weight: Number.isFinite(kg) ? String(Math.round(kg * LB_PER_KG)) : values.weight,
+  };
+}
+
 /**
  * The questionnaire. Targets are worked out live in the browser as you
  * answer; the server works them out again from the same answers when you save.
+ * `today` comes from the server (the user's time zone) so age matches on both.
  */
-export function TargetsForm() {
+export function TargetsForm({ today }: { today: string }) {
   const [state, formAction, pending] = useActionState(saveTargetsAction, {});
   const [values, setValues] = useState<TargetFormValues>({
+    units: "imperial",
     sex: "",
-    age: "",
+    dob: "",
     heightFt: "",
     heightIn: "",
+    heightCm: "",
     weight: "",
     activity: "",
     goal: "",
   });
   const set = (name: keyof TargetFormValues) => (value: string) => setValues((v) => ({ ...v, [name]: value }));
+  const metric = values.units === "metric";
 
-  const parsed = parseTargetAnswers(values);
+  const parsed = parseTargetAnswers(values, today);
   const targets = parsed.ok ? computeTargets(parsed.answers) : null;
   const change = parsed.ok ? GOALS[parsed.answers.goal].calorieChange : 0;
   // Show a message from the last save only while that answer is still wrong,
@@ -99,15 +132,33 @@ export function TargetsForm() {
 
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+      <input type="hidden" name="units" value={values.units} />
+      <div role="radiogroup" aria-label="Units" className="grid grid-cols-2 gap-1 rounded-xl bg-background p-1">
+        {(Object.keys(UNITS) as Units[]).map((units) => (
+          <button
+            key={units}
+            type="button"
+            role="radio"
+            aria-checked={values.units === units}
+            onClick={() => setValues((v) => (v.units === units ? v : convertUnits(v, units)))}
+            className={`rounded-lg px-2 py-2 text-sm font-medium transition-colors ${
+              values.units === units ? "bg-surface text-foreground shadow-sm" : "text-muted hover:text-foreground"
+            }`}
+          >
+            {UNITS[units]}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <Field
-          label="Age"
-          name="age"
-          type="number"
-          inputMode="numeric"
-          value={values.age}
-          onChange={(e) => set("age")(e.target.value)}
-          error={errors.age}
+          label="Date of birth"
+          name="dob"
+          type="date"
+          max={today}
+          value={values.dob}
+          onChange={(e) => set("dob")(e.target.value)}
+          error={errors.dob}
         />
         <SelectField
           label="Sex"
@@ -120,29 +171,40 @@ export function TargetsForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <div className="grid grid-cols-2 gap-3">
+        {metric ? (
           <Field
-            label="Height (ft)"
-            name="heightFt"
+            label="Height (cm)"
+            name="heightCm"
             type="number"
             inputMode="numeric"
-            value={values.heightFt}
-            onChange={(e) => set("heightFt")(e.target.value)}
+            value={values.heightCm}
+            onChange={(e) => set("heightCm")(e.target.value)}
           />
-          <Field
-            label="Height (in)"
-            name="heightIn"
-            type="number"
-            inputMode="numeric"
-            value={values.heightIn}
-            onChange={(e) => set("heightIn")(e.target.value)}
-          />
-        </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            <Field
+              label="Height (ft)"
+              name="heightFt"
+              type="number"
+              inputMode="numeric"
+              value={values.heightFt}
+              onChange={(e) => set("heightFt")(e.target.value)}
+            />
+            <Field
+              label="Height (in)"
+              name="heightIn"
+              type="number"
+              inputMode="numeric"
+              value={values.heightIn}
+              onChange={(e) => set("heightIn")(e.target.value)}
+            />
+          </div>
+        )}
         {errors.height && <p className="text-sm text-danger">{errors.height}</p>}
       </div>
 
       <Field
-        label="Weight (lb)"
+        label={metric ? "Weight (kg)" : "Weight (lb)"}
         name="weight"
         type="number"
         inputMode="decimal"

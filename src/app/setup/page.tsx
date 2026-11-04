@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Card } from "@/components/ui";
 import { requireUser } from "@/lib/session";
+import { today } from "@/lib/today";
 import { TargetsForm } from "./targets-form";
 
 export const metadata: Metadata = { title: "Set your targets · Prepped" };
 
 export default async function SetupPage() {
   await requireUser();
+  const todayDay = await today();
 
   return (
     <div className="flex flex-col gap-5">
@@ -19,7 +21,7 @@ export default async function SetupPage() {
         </p>
       </div>
       <Card>
-        <TargetsForm />
+        <TargetsForm today={todayDay} />
       </Card>
       <p className="text-center text-sm text-muted">
         <Link href="/today" className="font-medium text-accent hover:underline">
