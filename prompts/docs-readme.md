@@ -13,6 +13,12 @@ Continuing "backwards induct from those outcomes and get started." The brief ask
 - The tools and what each is for
 - How to run it locally (PGlite, no database setup needed), the tests, and how deploys apply migrations
 
-## Open item
+## Live URL
 
-The live URL is filled in once the Neon database is connected and the first production deploy succeeds.
+**Me:** "i think its done" (after accepting Neon's terms in Vercel)
+
+The agent connected the Neon database and redeployed. The build log showed "Production database migrated." and the app went live at **https://prepped-beta.vercel.app**.
+
+## Mistake the agent made
+
+The agent ran "fill in the URL → commit → open PR → merge" as one chain. The text-replacement step failed on a `#` character, so nothing was committed, but the PR was still opened and merged (PR #30) with the placeholder in the README. The agent caught it right after by checking the PR, and fixed it in a follow-up PR (#32). Lesson: check each step succeeded before merging.

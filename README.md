@@ -2,7 +2,7 @@
 
 **A meal-prep calorie tracker.** Save the meals you actually cook, log a serving in one tap, see calories and protein against your daily goal, and know how many prepped servings are left in the fridge.
 
-**Live app:** _added once production is deployed (see below)_
+**Live app:** https://prepped-beta.vercel.app
 
 Built for my capstone (Classes 1–10). The plan came first ([PLAN.md](PLAN.md)), then one feature per pull request, each with an Issue, a branch and a prompt log in [`prompts/`](prompts/).
 
