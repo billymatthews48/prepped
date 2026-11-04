@@ -6,7 +6,7 @@ Postgres (Neon in production, PGlite locally). Tables are defined in [`src/db/sc
 
 | Table | What one row means | Columns (type) | Primary key |
 |---|---|---|---|
-| **users** | One account | id (text), name (text), email (text, unique), email_verified (true/false), image (text, optional), created_at (date/time), updated_at (date/time) | id |
+| **users** | One account | id (text), name (text), email (text, unique), email_verified (true/false), image (text, optional), daily_calorie_goal (number, default 2,200), created_at (date/time), updated_at (date/time) | id |
 | **meals** | A meal I cook or eat repeatedly | id (number), user_id (text), name (text), slot (text: breakfast / lunch / dinner / snack), calories (number, per serving), protein_g (number, per serving), notes (text, optional), created_at, updated_at | id |
 | **log_entries** | One time I ate a meal | id (number), user_id (text), meal_id (number), eaten_on (date), servings (number, default 1), created_at | id |
 | **stars** | "This user starred this meal" | user_id (text), meal_id (number), created_at | (user_id, meal_id) together |
@@ -49,7 +49,7 @@ These tables exist so login works. I didn't design them.
 
 | Planned | Built so far | Notes |
 |---|---|---|
-| users | ✅ | `daily_calorie_goal` comes with Feature 9 (daily goal) |
+| users | ✅ | `daily_calorie_goal` added in Feature 9 (migration `0002_daily_goal.sql`) |
 | meals | ✅ | As planned. `protein_g` defaults to 0 if left empty |
 | log_entries | ✅ | `batch_id` comes with Feature 10 (meal-prep batches) |
 | batches | Not yet | Feature 10 |

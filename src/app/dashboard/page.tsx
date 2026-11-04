@@ -3,7 +3,7 @@ import { ButtonLink, Card, PageHeader } from "@/components/ui";
 import { DASHBOARD_DAYS, getDashboard } from "@/lib/dashboard";
 import { formatCalories, formatGrams } from "@/lib/format";
 import { requireUser } from "@/lib/session";
-import { DEFAULT_CALORIE_GOAL } from "@/lib/stats";
+import { getCalorieGoal } from "@/lib/goal";
 import { today } from "@/lib/today";
 import { CalorieChart } from "./calorie-chart";
 
@@ -21,7 +21,7 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const { days, stats, topMeal, goal } = await getDashboard(user.id, await today(), DEFAULT_CALORIE_GOAL);
+  const { days, stats, topMeal, goal } = await getDashboard(user.id, await today(), await getCalorieGoal(user.id));
 
   return (
     <>
