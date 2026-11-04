@@ -85,3 +85,26 @@ erDiagram
 - **Least sure I can build:** meal-prep batches. Servings left has to stay right when I edit or delete a log entry, and the app has to know which batch a serving came from.
 - **Cut first:** the logging streak. If batches get shaky, I'll ship them with a "servings left" number I adjust by hand instead of an automatic countdown.
 - **Time risk:** everything is due Wednesday Nov 4, so the app has to be live by Tuesday evening to leave room for the stranger test and the fix PR.
+
+---
+
+## Plan vs. Reality
+
+_Added at the end, after the build. Everything above this line is the original plan, unchanged since it merged in PR #2._
+
+| Planned feature | Shipped / Changed / Cut | Status | Learning | What changed and why (one line) |
+|---|---|---|---|---|
+| 1. Sign up and login | Shipped | Done | "Accounts in my own users table" ruled out hosted login services | As planned. The agent added an 8-character password minimum and server-action forms (PR #6). |
+| 2. Data model | Changed | Done | A schema can arrive one migration per feature instead of all at once | `batches` and `users.daily_calorie_goal` were built with Features 10 and 9, not up front, and the agent added database CHECK rules (PR #8). |
+| 3. Meals CRUD | Shipped | Done | "Are you sure?" can be a styled dialog, not the browser's popup | As planned. The agent chose a custom confirm dialog that also warns the meal's log history goes too (PR #10). |
+| 4. Daily log | Changed | Done | Servers run on UTC, so "today" has to come from the user's browser | Added time-zone handling (Vercel's clock would flip the day at ~4pm Pacific), day-by-day navigation, and per-meal history (PR #14). |
+| 5. Validation | Shipped | Done | Validate on the server; the browser's checks can be skipped | As planned, plus typo guards (≤ 10,000 cal, ≤ 20 servings) the agent added. Its first draft was convoluted and got rewritten (PR #16). |
+| 6. Stars | Shipped | Done | One junction table with a (user, meal) primary key makes double-starring impossible | As planned. The star sits beside the meal link, not inside it (invalid HTML) (PR #18). |
+| 7. Find things | Shipped | Done | Keeping filters in the URL makes refresh and back "just work" | As planned (4 sorts). A stale dev server caused a scary hydration error that wasn't a real bug (PR #20). |
+| 8. Dashboard | Changed | Done | A vague phrase in a plan ("days I hit my goal") becomes a decision someone else makes | The agent defined "on goal" as at or under the goal and limited stats to the 14-day chart window. A streak tile was added later (PRs #22, #28). |
+| 9. Daily goal + progress bar | Shipped | Done | — | As planned, with an editable goal (800–6,000) that the dashboard now uses too (PR #24). |
+| 10. Meal-prep batches | Changed | Done | Calculating "servings left" instead of storing it removed the risk I was most worried about | Servings left is computed from the log, logging uses the oldest batch automatically, and a Fridge page was added that wasn't in the plan (PR #26). |
+| 11. Logging streak | Shipped | Done | The "cut first" feature was small once the data existed | Not cut. The streak stays alive until the day ends, so it doesn't read 0 at breakfast (PR #28). |
+| Tests (section 4) | Shipped | Done | Breaking the code on purpose proves the test can actually fail | Both tests as written, with red/green screenshots (PRs #12, #22), plus 32 extra checks. |
+| Technologies (section 5) | Changed | Done | A "local copy" of the database can be its own source of bugs | Added PGlite as the local/test database (not planned). Force-stopping the dev server corrupted it three times, so it now auto-rebuilds (PRs #4, #20, #24). Next.js "Cache Components" turned off. |
+| Time risk (section 7) | Changed | Done | Account steps (accepting terms, logins) are the real bottleneck, not code | The app was built by mid-afternoon, but going live waited about an hour on a Neon terms click only I could do. Live at prepped-beta.vercel.app on Tue Nov 3. |
